@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digilocker KYC - Bharat KYC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="flex items-center justify-center min-h-screen">
+        <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-lg">
+            
+            <!-- Step 1: Login Simulation -->
+            <div id="digilocker-login">
+                <div class="text-center">
+                    <img src="https://placehold.co/150x40/000000/FFFFFF?text=DigiLocker" alt="Digilocker Logo" class="mx-auto mb-4">
+                    <h2 class="text-2xl font-bold text-gray-800">Sign in to Continue</h2>
+                    <p class="mt-2 text-sm text-gray-600">You are being redirected to Digilocker to share your documents securely.</p>
+                </div>
+                <div class="mt-8">
+                    <div>
+                        <label for="aadhaar" class="text-sm font-medium text-gray-700">Aadhaar Number</label>
+                        <input type="text" id="aadhaar" value="1234 5678 9012" disabled class="w-full px-3 py-2 mt-1 text-gray-500 bg-gray-100 border border-gray-300 rounded-md">
+                    </div>
+                    <div class="mt-4">
+                        <label for="otp" class="text-sm font-medium text-gray-700">Enter 6-digit OTP</label>
+                        <input type="text" id="otp" placeholder="123456" class="w-full px-3 py-2 mt-1 placeholder-gray-400 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <button id="login-btn" class="w-full mt-6 py-3 font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">
+                        Sign In
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 2: Consent Simulation -->
+            <div id="digilocker-consent" class="hidden">
+                 <div class="text-center">
+                    <img src="https://placehold.co/150x40/000000/FFFFFF?text=DigiLocker" alt="Digilocker Logo" class="mx-auto mb-4">
+                    <h2 class="text-2xl font-bold text-gray-800">Share Documents</h2>
+                    <p class="mt-2 text-sm text-gray-600">Bharat KYC is requesting access to the following documents.</p>
+                </div>
+                <div class="mt-6 p-4 border rounded-md bg-gray-50">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="aadhaar-consent" checked class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                        <label for="aadhaar-consent" class="ml-3 block text-sm font-medium text-gray-700">Aadhaar Card</label>
+                    </div>
+                    <p class="ml-7 text-xs text-gray-500">Includes: Name, DOB, Address, Photo</p>
+                </div>
+                 <button id="consent-btn" class="w-full mt-6 py-3 font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700">
+                    Allow
+                </button>
+                <button onclick="window.location.href='index.html'" class="w-full mt-2 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">
+                    Deny
+                </button>
+            </div>
+
+             <!-- Step 3: Status View -->
+            <div id="status-view" class="hidden text-center">
+                <div id="spinner" class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+                <p id="status-text" class="mt-4 text-gray-600">Securely fetching your documents...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000';
+        const loginView = document.getElementById('digilocker-login');
+        const consentView = document.getElementById('digilocker-consent');
+        const statusView = document.getElementById('status-view');
+        const loginBtn = document.getElementById('login-btn');
+        const consentBtn = document.getElementById('consent-btn');
+        const statusText = document.getElementById('status-text');
+
+        loginBtn.addEventListener('click', () => {
+            const otp = document.getElementById('otp').value;
+            if (otp) {
+                loginView.classList.add('hidden');
+                consentView.classList.remove('hidden');
+            } else {
+                alert('Please enter the OTP to proceed.');
+            }
+        });
+
+        consentBtn.addEventListener('click', async () => {
+            consentView.classList.add('hidden');
+            statusView.classList.remove('hidden');
+
+            const user = JSON.parse(sessionStorage.getItem('user'));
+            if (!user || !user.token) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            try {
+                // Simulate fetching document from Digilocker and sending to our server
+                const response = await fetch(`${API_URL}/api/digilocker-callback`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${user.token}`
+                    },
+                    body: JSON.stringify({
+                        userId: user.id,
+                        documentData: {
+                            docType: 'Aadhaar (Digilocker)',
+                            // In a real scenario, this would be encrypted data or a URI
+                            filePath: 'uploads/digilocker-aadhaar-placeholder.jpg' 
+                        }
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to process Digilocker data.');
+                }
+
+                statusText.textContent = 'Documents shared successfully! Redirecting...';
+                
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 2000);
+
+            } catch (error) {
+                console.error('Digilocker Error:', error);
+                statusText.textContent = `Error: ${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html>

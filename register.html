@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bharat KYC - Register</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="w-full max-w-md p-8 space-y-8 bg-white rounded-2xl shadow-lg">
+        <div class="text-center">
+            <h1 class="text-3xl font-bold text-gray-900">Create Account</h1>
+            <p class="mt-2 text-sm text-gray-600">Join Bharat's trusted KYC platform.</p>
+        </div>
+        <form class="mt-8 space-y-6" onsubmit="registerUser(event)">
+            <div class="relative">
+                <label for="mobile" class="sr-only">Mobile Number</label>
+                <div class="flex items-center">
+                    <span class="inline-flex items-center px-3 text-sm text-gray-500 bg-gray-200 border border-r-0 border-gray-300 rounded-l-md h-12">+91</span>
+                    <input id="mobile" name="mobile" type="tel" autocomplete="tel" required
+                        class="relative block w-full px-3 py-3 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-r-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                        placeholder="Mobile Number" pattern="[6-9]{1}[0-9]{9}">
+                </div>
+            </div>
+
+            <div class="relative">
+                <label for="fullName" class="sr-only">Full Name</label>
+                <input id="fullName" name="fullName" type="text" autocomplete="name" required
+                    class="relative block w-full px-3 py-3 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                    placeholder="Full Name (as per documents)">
+            </div>
+
+            <div class="relative">
+                <label for="pin" class="sr-only">4-Digit PIN</label>
+                <input id="pin" name="pin" type="password" autocomplete="new-password" required
+                    class="relative block w-full px-3 py-3 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                    placeholder="Set a 4-Digit PIN" pattern="\d{4}" maxlength="4">
+            </div>
+
+            <div>
+                <button id="submit-btn" type="submit"
+                    class="group relative flex justify-center w-full px-4 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-400">
+                    Create Account
+                </button>
+            </div>
+        </form>
+        <div id="message" class="text-center text-sm"></div>
+        <div class="text-center">
+            <p class="text-sm text-gray-600">
+                Already have an account?
+                <a href="login.html" class="font-medium text-indigo-600 hover:text-indigo-500">
+                    Login here
+                </a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000'; // Your backend server URL
+
+        async function registerUser(event) {
+            event.preventDefault();
+            const messageEl = document.getElementById('message');
+            const submitBtn = document.getElementById('submit-btn');
+            
+            const mobile = document.getElementById('mobile').value;
+            const fullName = document.getElementById('fullName').value;
+            const pin = document.getElementById('pin').value;
+
+            // Simple client-side validation
+            if (!/^[6-9]\d{9}$/.test(mobile)) {
+                messageEl.textContent = 'Please enter a valid 10-digit mobile number.';
+                messageEl.className = 'text-red-500';
+                return;
+            }
+             if (!/^\d{4}$/.test(pin)) {
+                messageEl.textContent = 'PIN must be exactly 4 digits.';
+                messageEl.className = 'text-red-500';
+                return;
+            }
+
+            messageEl.textContent = 'Registering...';
+            messageEl.className = 'text-gray-600';
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_URL}/api/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ mobile, fullName, pin }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    messageEl.textContent = 'Registration successful! Redirecting to login...';
+                    messageEl.className = 'text-green-500';
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 2000);
+                } else {
+                    // Display error message from the server
+                    messageEl.textContent = data.message || 'Registration failed. Please try again.';
+                    messageEl.className = 'text-red-500';
+                }
+            } catch (error) {
+                console.error('Network or server error:', error);
+                messageEl.textContent = 'Could not connect to the server. Please check your connection.';
+                messageEl.className = 'text-red-500';
+            } finally {
+                submitBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
+

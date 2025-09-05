@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Bharat KYC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .chat-bubble { max-width: 80%; word-wrap: break-word; }
+        .chat-bubble-user { background-color: #4f46e5; color: white; }
+        .chat-bubble-ai { background-color: #e5e7eb; color: #1f2937; }
+        .typing-indicator span {
+            display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+            background-color: #4a5568; animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="w-full max-w-2xl p-4 mx-auto my-8 md:p-8">
+        <div class="flex items-center justify-between pb-6 border-b border-gray-200">
+            <div>
+                <h1 id="welcome-message" class="text-3xl font-bold text-gray-900">Welcome!</h1>
+                <p class="mt-1 text-sm text-gray-600">Complete your KYC verification below.</p>
+            </div>
+            <button onclick="logout()" class="px-4 py-2 text-sm font-medium text-red-600 bg-red-100 rounded-md hover:bg-red-200">Logout</button>
+        </div>
+
+        <!-- Dynamic KYC Status Section -->
+        <div id="kyc-status-section" class="p-6 mt-8 text-center bg-white border border-gray-200 rounded-lg shadow-sm">
+            <!-- Content will be loaded dynamically -->
+             <div id="loading-status" class="text-gray-600">Loading your KYC status...</div>
+        </div>
+
+        <!-- KYC Options - Hidden by default, shown if KYC is not started -->
+        <div id="kyc-options" class="hidden mt-8">
+             <h2 class="text-xl font-semibold text-center text-gray-800 mb-6">Choose a Verification Method</h2>
+             <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <!-- Digilocker -->
+                 <a href="digilocker.html" class="p-6 text-center bg-white border border-gray-200 rounded-lg hover:shadow-lg transition-shadow">
+                    <div class="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full">
+                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                    </div>
+                    <h3 class="mb-2 text-lg font-semibold text-gray-800">Digilocker</h3>
+                    <p class="mb-4 text-sm text-gray-600">Fast and paperless verification.</p>
+                    <button class="w-full px-4 py-2 font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">Use Digilocker</button>
+                </a>
+                 <!-- Manual Upload -->
+                <div class="p-6 text-center bg-white border border-gray-200 rounded-lg hover:shadow-lg transition-shadow">
+                    <div class="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full">
+                       <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                    </div>
+                    <h3 class="mb-2 text-lg font-semibold text-gray-800">Upload Documents</h3>
+                    <p class="mb-4 text-sm text-gray-600">Upload Aadhaar, PAN, or other supported documents.</p>
+                    <button onclick="window.location.href='upload.html'" class="w-full px-4 py-2 font-medium text-white bg-green-600 rounded-md hover:bg-green-700">Upload Manually</button>
+                </div>
+                 <!-- Face Authentication -->
+                <div class="p-6 text-center bg-white border border-gray-200 rounded-lg md:col-span-2 hover:shadow-lg transition-shadow">
+                    <div class="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-yellow-100 rounded-full">
+                       <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <h3 class="mb-2 text-lg font-semibold text-gray-800">Face Authentication</h3>
+                    <p class="mb-4 text-sm text-gray-600">Verify your identity with a quick face scan for liveness.</p>
+                    <button onclick="window.location.href='face-scan.html'" class="w-full px-4 py-2 font-medium text-white bg-yellow-500 rounded-md hover:bg-yellow-600">Start Face Scan</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Assistant Feature -->
+        <div class="p-6 mt-8 bg-white border border-gray-200 rounded-lg shadow-sm">
+            <h3 class="text-lg font-semibold text-gray-800">Need Help?</h3>
+            <p class="mt-1 mb-4 text-sm text-gray-600">Ask our AI Assistant for help with the KYC process.</p>
+            <div id="chat-window" class="h-48 p-3 overflow-y-auto bg-gray-50 border rounded-md mb-3">
+                 <div class="flex justify-start">
+                     <div class="chat-bubble chat-bubble-ai rounded-lg p-2">
+                        Hi! I am an AI assistant. How can I help you with your KYC process today?
+                    </div>
+                </div>
+            </div>
+            <div class="flex space-x-2">
+                <input type="text" id="chat-input" class="flex-1 w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Type your question...">
+                <button id="chat-send-btn" class="px-4 py-2 font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:bg-indigo-400">Ask</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000';
+        let user = null;
+        let chatHistory = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const userDataString = sessionStorage.getItem('user');
+            if (userDataString) {
+                user = JSON.parse(userDataString);
+                document.getElementById('welcome-message').textContent = `Welcome, ${user.fullName}!`;
+                fetchUserStatus();
+            } else {
+                 window.location.href = 'login.html';
+            }
+
+            const chatInput = document.getElementById('chat-input');
+            const chatSendBtn = document.getElementById('chat-send-btn');
+            chatSendBtn.addEventListener('click', handleChat);
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleChat();
+            });
+        });
+        
+        async function fetchUserStatus() {
+            if (!user || !user.token) {
+                logout();
+                return;
+            }
+            try {
+                const response = await fetch(`${API_URL}/api/user/status`, {
+                    headers: { 'Authorization': `Bearer ${user.token}` }
+                });
+                
+                if (response.status === 401 || response.status === 403) {
+                    logout(); // Token is invalid or expired
+                    return;
+                }
+                if (!response.ok) {
+                    throw new Error('Could not fetch status');
+                }
+                
+                const updatedStatus = await response.json();
+                user.kycStatus = updatedStatus.kycStatus;
+                user.rejectionReason = updatedStatus.rejectionReason;
+                
+                sessionStorage.setItem('user', JSON.stringify(user));
+                renderStatus();
+
+            } catch (error) {
+                console.error("Failed to fetch user status:", error);
+                document.getElementById('loading-status').innerHTML = '<span class="text-red-600">Error loading status. Please try again.</span>';
+            }
+        }
+        
+        function renderStatus() {
+            const statusSection = document.getElementById('kyc-status-section');
+            const optionsSection = document.getElementById('kyc-options');
+            let statusHTML = '';
+
+            switch(user.kycStatus) {
+                case 'Verified':
+                    statusSection.className = 'p-6 mt-8 text-center bg-green-50 border border-green-200 rounded-lg shadow-sm';
+                    statusHTML = `
+                        <div class="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full">
+                           <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <h2 class="text-2xl font-bold text-green-800">KYC Verified!</h2>
+                        <p class="mt-2 text-sm text-green-700">Your identity has been successfully verified. Thank you!</p>
+                    `;
+                    optionsSection.classList.add('hidden');
+                    break;
+                case 'Rejected':
+                    statusSection.className = 'p-6 mt-8 text-center bg-red-50 border border-red-200 rounded-lg shadow-sm';
+                    statusHTML = `
+                        <div class="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full">
+                            <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <h2 class="text-2xl font-bold text-red-800">KYC Rejected</h2>
+                        <p class="mt-2 text-sm text-red-700">Reason: <strong>${user.rejectionReason || 'No reason provided.'}</strong></p>
+                        <p class="mt-2 text-sm text-gray-600">Please upload your documents again with the corrections.</p>
+                    `;
+                    optionsSection.classList.remove('hidden');
+                    break;
+                case 'Pending':
+                    statusSection.className = 'p-6 mt-8 text-center bg-blue-50 border border-blue-200 rounded-lg shadow-sm';
+                    statusHTML = `
+                        <div class="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full">
+                            <svg class="w-8 h-8 text-blue-600 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        </div>
+                        <h2 class="text-2xl font-bold text-blue-800">KYC In Progress</h2>
+                        <p class="mt-2 text-sm text-blue-700">Your documents are being reviewed. This usually takes 24 hours.</p>
+                    `;
+                    optionsSection.classList.add('hidden');
+                    break;
+                case 'Not Started':
+                default:
+                    statusSection.className = 'p-6 mt-8 text-center bg-gray-50 border border-gray-200 rounded-lg shadow-sm';
+                    statusHTML = `
+                        <h2 class="text-2xl font-bold text-gray-800">Verification Required</h2>
+                        <p class="mt-2 text-sm text-gray-600">Your account is not yet verified. Please complete the KYC process.</p>
+                    `;
+                    optionsSection.classList.remove('hidden');
+                    break;
+            }
+            statusSection.innerHTML = statusHTML;
+        }
+
+        function logout() {
+            sessionStorage.clear();
+            window.location.href = 'login.html';
+        }
+
+        // --- AI Assistant Chat Logic ---
+        async function handleChat() {
+            const chatInput = document.getElementById('chat-input');
+            const chatSendBtn = document.getElementById('chat-send-btn');
+            const query = chatInput.value.trim();
+
+            if (!query) return;
+
+            appendMessage(query, 'user');
+            chatHistory.push({ role: "user", parts: [{ text: query }] });
+            chatInput.value = '';
+            chatInput.disabled = true;
+            chatSendBtn.disabled = true;
+            
+            appendTypingIndicator();
+
+            try {
+                const response = await fetch(`${API_URL}/api/ai-help`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: query }), // Sending the single query as per server
+                });
+
+                if (!response.ok) throw new Error('AI service error');
+                
+                const data = await response.json();
+                
+                removeTypingIndicator();
+                appendMessage(data.reply, 'ai');
+                chatHistory.push({ role: "model", parts: [{ text: data.reply }] });
+
+            } catch (error) {
+                console.error('AI Help Error:', error);
+                removeTypingIndicator();
+                appendMessage('Sorry, something went wrong. Please try again.', 'ai');
+            } finally {
+                chatInput.disabled = false;
+                chatSendBtn.disabled = false;
+                chatInput.focus();
+            }
+        }
+
+        function appendMessage(text, sender) {
+            const chatWindow = document.getElementById('chat-window');
+            const wrapper = document.createElement('div');
+            wrapper.className = `flex mb-2 ${sender === 'user' ? 'justify-end' : 'justify-start'}`;
+            const bubble = document.createElement('div');
+            bubble.className = `chat-bubble rounded-lg p-2 ${sender === 'user' ? 'chat-bubble-user' : 'chat-bubble-ai'}`;
+            bubble.textContent = text;
+            wrapper.appendChild(bubble);
+            chatWindow.appendChild(wrapper);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        function appendTypingIndicator() {
+            const chatWindow = document.getElementById('chat-window');
+            const wrapper = document.createElement('div');
+            wrapper.id = 'typing-indicator';
+            wrapper.className = 'flex justify-start mb-2';
+            wrapper.innerHTML = `
+                <div class="chat-bubble chat-bubble-ai rounded-lg p-3">
+                    <div class="typing-indicator"><span></span><span></span><span></span></div>
+                </div>
+            `;
+            chatWindow.appendChild(wrapper);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const indicator = document.getElementById('typing-indicator');
+            if (indicator) indicator.remove();
+        }
+    </script>
+</body>
+</html>
+
